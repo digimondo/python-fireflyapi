@@ -1,0 +1,6 @@
+*.pyc
+.idea
+.idea/*
+test
+test/*
+fireflyapi/__pycache__
