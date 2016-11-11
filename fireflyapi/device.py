@@ -51,7 +51,7 @@ class Device(Observable, APIEntity):
     _export = {
         'eui', 'name', 'address', 'description',
         'otaa', 'network_session_key', 'application_session_key',
-        'application_key', 'tags'
+        'application_key', 'tags', 'class_c'
     }
 
     api = None
@@ -68,7 +68,8 @@ class Device(Observable, APIEntity):
     application_session_key = None
     application_key = None
     tags = []
-    application = 1 # application (internal) id, might be needet for creation
+    application = 1  # application (internal) id, might be needet for creation
+    class_c = False
 
     def __init__(self, api=None, **args):
         self.api = api
@@ -105,7 +106,8 @@ class Device(Observable, APIEntity):
                     'otaa': self.otaa,
                     'network_session_key':self.network_session_key,
                     'application_session_key': self.application_session_key,
-                    'application_key': self.application_key
+                    'application_key': self.application_key,
+                    'class_c': self.class_c
             }
 
         return json.dumps(ret)
