@@ -1,3 +1,4 @@
+from . import logger
 from . import HTTP_VERBS
 import sys
 import logging
@@ -11,9 +12,9 @@ from .device import Device
 from .device_class import DeviceClass
 from .application import Application
 
-logger = logging.getLogger('firefly-API')
 
 DEFAULT_HEADERS = {'Accept': 'application/json'}
+
 
 class API(object):
     """
