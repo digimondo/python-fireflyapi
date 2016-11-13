@@ -1,9 +1,9 @@
-from . import HTTP_VERBS, PAYLOAD_ENCODING
+from . import HTTP_VERBS, PAYLOAD_ENCODING, logger
 import time
 from datetime import datetime
 from .api_entity import APIEntity, exists, not_exists
 from .observable import Observable
-from .api_exception import APIException
+from .api_exception import APIException, EntityAlreadyCreatedError, EntityNotFoundError
 from .util import is_string
 import base64
 import numbers
@@ -135,6 +135,9 @@ class Device(Observable, APIEntity):
 
         res = self.api.call(HTTP_VERBS.GET, 'devices/eui/%s/packets' % self.eui, query=query)
 
+        if (res.status_code == 404):
+            raise EntityNotFoundError(res.json())
+
         resdata = res.json()
         return (resdata['count']-offset-limit_to_last, resdata['count']), _pkg_gen(self, resdata['packets'])
 
@@ -160,6 +163,9 @@ class Device(Observable, APIEntity):
             query['received_after'] = received_after
 
         res = self.api.call(HTTP_VERBS.GET, 'devices/eui/%s/down_packets' % self.eui, query=query)
+
+        if(res.status_code==404):
+            raise EntityNotFoundError(res.json())
 
         resdata = res.json()
         return (resdata['count']-offset-limit_to_last, resdata['count']), _pkg_gen(self, resdata['packets'])
@@ -187,7 +193,11 @@ class Device(Observable, APIEntity):
         """
         Delete this device using the API
         """
+        logger.info('deleting device %s' % self.eui)
         self.api.call(HTTP_VERBS.DELETE, 'devices/eui/%s' % self.eui)
+
+
+
         self._exists = False
         self._not_dirty()
 
@@ -196,8 +206,23 @@ class Device(Observable, APIEntity):
         """
         Update this device using the API
         """
+        logger.info('updating device %s' % self.eui)
         self.api.call(HTTP_VERBS.PUT, 'devices/eui/%s' % self.eui, data=self.to_json('update'))
         self._not_dirty()
+
+    @exists
+    def pull(self):
+        """
+        update local device instance
+        """
+        response = self.call(HTTP_VERBS.GET, 'devices/eui/%s' % self.eui)
+
+        respdata = response.json()
+
+        if (not 'device' in respdata):
+            raise APIException('no such device eui="%s"' % self.eui)
+
+        self.__dict__.update(respdata['device'])
 
     @exists
     def send_packet(self, payload, encoding=None, port=1, force_encode=False):

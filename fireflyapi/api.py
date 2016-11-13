@@ -7,7 +7,7 @@ try:
 except ImportError:
     import json
 import requests
-from .api_exception import APIException
+from .api_exception import APIException, EntityNotFoundError, EntityAlreadyCreatedError
 from .device import Device
 from .device_class import DeviceClass
 from .application import Application
@@ -109,7 +109,14 @@ class API(object):
         if(response.status_code >= 400):
             if('application/json' in response.headers.get('content-type', '')):
                 logger.warn('HTTP Error [%s] : %s' % (response.status_code, response.content))
-                raise APIException('HTTP Error [%s] : %s' % (response.status_code, response.content), response.json())
+                if (response.status_code == 404):
+                    raise EntityNotFoundError(response.json())
+                elif (response.status_code == 422):
+                    raise EntityAlreadyCreatedError(response.json())
+                else:
+                    raise APIException('HTTP Error [%s] : %s' %
+                                        (response.status_code, response.content), response.json()
+                                      )
             # dumb magic to get error message from html error page ;)
             elif ('html' in response.headers.get('content-type', '')):
                 msgi = response.content.find('lead">')+6
@@ -117,10 +124,20 @@ class API(object):
                     errmsg = response.content[msgi:response.content.find('</', msgi)]
                 else:
                     errmsg = '--- unparseable error body type ---'
-                raise APIException('HTTP Error [%s] : %s' %
-                                   (response.status_code, errmsg))
+
+                if (response.status_code == 404):
+                    raise EntityNotFoundError(errmsg)
+                elif (response.status_code == 422):
+                    raise EntityAlreadyCreatedError(errmsg)
+                else:
+                    raise APIException('HTTP Error [%s] : %s' % (response.status_code, errmsg))
             else:
-                raise APIException('HTTP Error [%s] : %s' %
+                if (response.status_code == 404):
+                    raise EntityNotFoundError(None)
+                elif (response.status_code == 422):
+                    raise EntityAlreadyCreatedError(None)
+                else:
+                    raise APIException('HTTP Error [%s] : %s' %
                                    (
                                         response.status_code,
                                         '--- unkown error body type %s---' %
@@ -167,8 +184,7 @@ class API(object):
         if(eui):
             response = self.call(HTTP_VERBS.GET, 'devices/eui/%s' % eui)
         elif(address):
-            response = self.call(HTTP_VERBS.GET, 'devices/address/%s' % eui)
-
+            response = self.call(HTTP_VERBS.GET, 'devices/address/%s' % address)
 
         respdata = response.json()
 

@@ -1,4 +1,7 @@
 import sys
+import logging
+
+logger = logging.getLogger('firefly-API')
 
 PY3 = sys.version_info[0] == 3
 
