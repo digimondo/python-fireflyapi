@@ -98,6 +98,8 @@ class API(object):
             response = requests.post(url=url, params=query, json=data, headers=DEFAULT_HEADERS)
         elif (method == HTTP_VERBS.PUT):
             response = requests.put(url=url, params=query, json=data, headers=DEFAULT_HEADERS)
+        elif (method == HTTP_VERBS.DELETE):
+            response = requests.delete(url=url, params=query, headers=DEFAULT_HEADERS)
 
         logger.debug('successfully requested  %s' % url)
         if(data and not method in [HTTP_VERBS.GET,HTTP_VERBS.DELETE]):
@@ -105,12 +107,13 @@ class API(object):
 
         if(response.status_code >= 400):
             if('application/json' in response.headers.get('content-type', '')):
-                raise APIException('HTTP Error [%s] : %s' % (response.status_code, response.content))
+                logger.warn('HTTP Error [%s] : %s' % (response.status_code, response.content))
+                raise APIException('HTTP Error [%s] : %s' % (response.status_code, response.content), response.json())
             # dumb magic to get error message from html error page ;)
             elif ('html' in response.headers.get('content-type', '')):
                 msgi = response.content.find('lead">')+6
                 if(msgi>=0):
-                    errmsg = response.content[msgi:response.content.find('</',msgi)]
+                    errmsg = response.content[msgi:response.content.find('</', msgi)]
                 else:
                     errmsg = '--- unparseable error body type ---'
                 raise APIException('HTTP Error [%s] : %s' %
