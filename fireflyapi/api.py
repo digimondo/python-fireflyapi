@@ -1,5 +1,5 @@
 from . import logger
-from . import HTTP_VERBS
+from . import HTTP_VERBS, PAYLOAD_ENCODING
 import sys
 import logging
 try:

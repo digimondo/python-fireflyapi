@@ -168,6 +168,9 @@ class Device(Observable, APIEntity):
             raise EntityNotFoundError(res.json())
 
         resdata = res.json()
+
+        logger.debug('got ( %s / %s ) packets' % (resdata['count']-offset-limit_to_last, resdata['count']))
+
         return (resdata['count']-offset-limit_to_last, resdata['count']), _pkg_gen(self, resdata['packets'])
 
     @exists
@@ -250,7 +253,8 @@ class Device(Observable, APIEntity):
             'port': port
         }
 
-        self.api.call(HTTP_VERBS.POST, 'devices/eui/%s/packet' % self.eui, data=data)
+        response = self.api.call(HTTP_VERBS.POST, 'devices/eui/%s/packet' % self.eui, data=data)
+        logger.info('packet send : %s' % response.json())
 
     def export(self):
         return self._export
