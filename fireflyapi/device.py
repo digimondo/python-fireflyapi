@@ -196,8 +196,6 @@ class Device(Observable, APIEntity):
         logger.info('deleting device %s' % self.eui)
         self.api.call(HTTP_VERBS.DELETE, 'devices/eui/%s' % self.eui)
 
-
-
         self._exists = False
         self._not_dirty()
 
@@ -215,7 +213,7 @@ class Device(Observable, APIEntity):
         """
         update local device instance
         """
-        response = self.call(HTTP_VERBS.GET, 'devices/eui/%s' % self.eui)
+        response = self.api.call(HTTP_VERBS.GET, 'devices/eui/%s' % self.eui)
 
         respdata = response.json()
 
@@ -237,6 +235,7 @@ class Device(Observable, APIEntity):
             raise APIException('empty payload')
 
         if (not encoding and force_encode):
+            logger.warn('no encoding given but force encoding requested, defaulting to Base64')
             encoding = PAYLOAD_ENCODING.BASE64
 
         if(force_encode and not PAYLOAD_ENCODING.f_has(encoding)):
@@ -271,7 +270,8 @@ class Device(Observable, APIEntity):
                 'eui': self.eui,
                 'name': self.name,
                 'description': self.description,
-                'otaa': self.otaa
+                'otaa': self.otaa,
+                'class_c': self.class_c
             }
         }
 
