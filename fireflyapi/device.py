@@ -174,11 +174,12 @@ class Device(Observable, APIEntity):
         return (resdata['count']-offset-limit_to_last, resdata['count']), _pkg_gen(self, resdata['packets'])
 
     @exists
-    def get_all_up_packets(self, chunksize=100):
+    def get_all_up_packets(self, chunksize=100, chunkwait=1):
         """
         contineous stream all device up-packets, will lead to a lot of requests (depending on the total packet count and
         chunksize)
         :param chunksize : how many packets to fetch at a time
+        :param chunkwait : how many seconds to wait after requesting the next chunk
         :return: a generator for all packets of this device
         """
         count, last = self.get_up_packets()
@@ -190,6 +191,8 @@ class Device(Observable, APIEntity):
                 yield p
             ucnt += chunksize
             dcnt -= chunksize
+            if(chunkwait):
+                time.sleep(chunkwait)
 
     @exists
     def delete(self):

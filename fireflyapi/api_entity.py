@@ -15,6 +15,12 @@ class APIEntity(JSONDump):
     def export(self):
         return self._export
 
+    def __repr__(self):
+        return self.to_json()
+
+    def __str__(self):
+        return self.to_json()
+
 
 # existance decorator, will fail if ent does not yet exist
 def exists(func):
